@@ -1,4 +1,4 @@
-#########
+ooooooooo
 # #     #
 # ##### #
 #       #
@@ -10,3 +10,34 @@
 
 
 4x4
+
+	maze[0].south = true;
+	maze[1].east = true;
+	maze[2].east = true;
+	maze[2].west = true;
+	maze[3].west = true;
+	maze[3].south = true;
+
+	maze[4].east = true;
+	maze[4].north = true;
+	maze[5].east = true;
+	maze[5].west = true;
+	maze[6].east = true;
+	maze[6].west = true;
+	maze[7].north = true;
+	maze[7].south = true;
+	maze[8].east = true;
+	maze[8].south = true;
+	maze[9].west = true;
+	maze[10].east = true;
+	maze[10].south = true;
+	maze[11].north = true;
+	maze[11].west = true;
+	maze[12].north = true;
+	maze[12].east = true;
+	maze[13].east = true;
+	maze[13].west = true;
+	maze[14].east = true;
+	maze[14].west = true;
+	maze[14].north = true;
+	maze[15].west = true;

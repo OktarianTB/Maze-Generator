@@ -12,7 +12,9 @@ int main(){
 
 	srand(clock());
 
-	Maze maze(4, 4);
+	Maze maze(20, 8);
+	cout << endl;
+	cout << boolalpha << maze.generateMaze() << endl;
 	maze.printMaze();
 
 
