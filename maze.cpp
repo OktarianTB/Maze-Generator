@@ -6,7 +6,9 @@
 
 #include "maze.h"
 
-const char fence = 'x';
+const char wall = '#';
+const char space = ' ';
+const char solution = 'o';
 
 Stack::Stack()
 {
@@ -44,12 +46,15 @@ bool Stack::isEmpty() const
 	return top == nullptr ? true : false;
 }
 
-Cell* Stack::getTop()
+Cell* Stack::getTop() const
 {
+	if(top == nullptr){
+		return nullptr;
+	}
 	return top->data;
 }
 
-int Stack::getLength()
+int Stack::getLength() const
 {
 	if(top == nullptr) return 0;
 
@@ -64,7 +69,7 @@ int Stack::getLength()
 	return length;
 }
 
-Cell* Stack::getRandom()
+Cell* Stack::getRandom() const
 {
 	int length = getLength();
 	int index = rand() % length;
@@ -94,13 +99,16 @@ Maze::Maze(int width, int height)
 	}
 
 	stack = new Stack;
+	path = new Stack;
 
 	// Start of maze at (0, 0)
 	stack->push(&maze[0]);
 	nbOfCellsVisited = 1;
 	maze[0].visited = true;
-
+	maze[0].explored = true;
+	maze[0].isOnPath = true;
 }
+
 
 Maze::~Maze()
 {
@@ -115,7 +123,8 @@ Maze::~Maze()
 
 bool Maze::generateMaze()
 {
-	if(nbOfCellsVisited == mazeHeight*mazeWidth) return true;
+	if(nbOfCellsVisited == mazeHeight*mazeWidth)
+		return true;
 
 	Stack neighbors;
 
@@ -154,38 +163,38 @@ bool Maze::generateMaze()
 	if(!neighbors.isEmpty())
 	{
 		Cell* selectedNeighbor = neighbors.getRandom();
-		maze[selectedNeighbor->index].visited = true;
+		selectedNeighbor->visited = true;
 
 		// Relation: neighbor is EAST of current top
 		if(stack->getTop()->x < selectedNeighbor->x)
 		{
 			stack->getTop()->east = true;
-			maze[selectedNeighbor->index].west = true;
+			selectedNeighbor->west = true;
 		}
 
 		// Relation: neighbor is WEST of current top
 		if(stack->getTop()->x > selectedNeighbor->x)
 		{
 			stack->getTop()->west = true;
-			maze[selectedNeighbor->index].east = true;
+			selectedNeighbor->east = true;
 		}
 
 		// Relation: neighbor is SOUTH of current top
 		if(stack->getTop()->y > selectedNeighbor->y)
 		{
 			stack->getTop()->north = true;
-			maze[selectedNeighbor->index].south = true;
+			selectedNeighbor->south = true;
 		}
 
 		// Relation: neighbor is SOUTH of current top
 		if(stack->getTop()->y < selectedNeighbor->y)
 		{
 			stack->getTop()->south = true;
-			maze[selectedNeighbor->index].north = true;
+			selectedNeighbor->north = true;
 		}
 
 
-		stack->push(&maze[selectedNeighbor->index]);
+		stack->push(selectedNeighbor);
 		nbOfCellsVisited++;
 	}
 	else
@@ -199,32 +208,120 @@ bool Maze::generateMaze()
 }
 
 
-void printRow(int nb){
+bool Maze::solveMaze()
+{
+	if(path->getTop() == nullptr)
+		path->push(&maze[0]);
+
+	if(path->getTop()->x == mazeWidth-1 && path->getTop()->y == mazeHeight-1)
+		return true;
+
+	// Finding whether there is a free neighbor to explore
+	Stack neighbors;
+	if(path->getTop()->east){
+		int index = path->getTop()->index + 1;
+		if(!maze[index].explored)
+			neighbors.push(&maze[index]);
+	}
+	if(path->getTop()->west){
+		int index = path->getTop()->index - 1;
+		if(!maze[index].explored)
+			neighbors.push(&maze[index]);
+	}
+
+	if(path->getTop()->north){
+		int index = path->getTop()->index - mazeWidth;
+		if(!maze[index].explored)
+			neighbors.push(&maze[index]);
+	}
+
+	if(path->getTop()->south){
+		int index = path->getTop()->index + mazeWidth;
+		if(!maze[index].explored)
+			neighbors.push(&maze[index]);
+	}
+
+	if(!neighbors.isEmpty())
+	{
+		Cell* selectedNeighbor = neighbors.getRandom();
+		selectedNeighbor->isOnPath = true;
+		selectedNeighbor->explored = true;
+		path->push(selectedNeighbor);
+	}
+	else
+	{
+		path->getTop()->isOnPath = false;
+		path->pop();
+
+		if(path->isEmpty()) return false;
+	}
+
+	return solveMaze();
+}
+
+
+void printRow(int nb)
+{
 	for(int i = 0; i < nb; i++)
-		cout << fence;
+		cout << wall;
 	cout << endl;
 }
 
 
-void Maze::printMaze() const
+void Maze::printMaze(bool displayPath) const
 {
-	printRow(2 * mazeWidth + 1);
+	printRow(4 * mazeWidth);
 	for(int i = 0; i < mazeHeight; i++){
-		cout << fence;
+		cout << wall;
 
 		for(int j = 0; j < mazeWidth; j++){
-			if(maze[i*mazeWidth + j].east)
-				cout << "  ";
-			else
-				cout << " " << fence;
+			if(maze[i*mazeWidth + j].east){
+				if(maze[i*mazeWidth + j].isOnPath && displayPath)
+					cout << solution << solution << solution << solution;
+				else
+					cout << space << space << space << space;
+			}
+			else{
+				if(j == mazeWidth-1){
+					if(maze[i*mazeWidth + j].isOnPath && displayPath)
+						cout << solution << solution << wall;
+					else
+						cout << space << space << wall;
+				}
+				else{
+					if(maze[i*mazeWidth + j].isOnPath && displayPath)
+						cout << solution << solution << wall << wall;
+					else
+						cout << space << space << wall << wall;
+				}
+
+			}
+
 		}
 		cout << endl;
-		cout << fence;
+		cout << wall;
+
 		for(int j = 0; j < mazeWidth; j++){
-			if(maze[i*mazeWidth + j].south)
-				cout << " " << fence;
-			else
-				cout << fence << fence;
+			if(maze[i*mazeWidth + j].south){
+				if(j == mazeWidth-1){
+					if(maze[i*mazeWidth + j].isOnPath && displayPath)
+						cout << solution << solution << wall;
+					else
+						cout << space << space << wall;
+				}
+				else{
+					if(maze[i*mazeWidth + j].isOnPath && displayPath)
+						cout << solution << solution << wall << wall;
+					else
+						cout << space << space << wall << wall;
+				}
+			}
+			else{
+				if(j == mazeWidth-1)
+					cout << wall << wall << wall;
+				else
+					cout << wall << wall << wall << wall;
+			}
 		}
 		cout << endl;
 

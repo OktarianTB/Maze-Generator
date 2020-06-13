@@ -12,7 +12,9 @@ struct Cell
 	int x;
 	int y;
 	int index;
-	bool visited;
+	bool visited; // For maze generation
+	bool explored; // For maze solving
+	bool isOnPath;
 
 	bool north;
 	bool south;
@@ -25,6 +27,8 @@ struct Cell
 		y = 0;
 		index = 0;
 		visited = false;
+		explored = false;
+		isOnPath = false;
 		north = false;
 		south = false;
 		east = false;
@@ -55,10 +59,12 @@ public:
 
 	void push(Cell* cell);
 	void pop();
-	Cell* getTop();
+
 	bool isEmpty() const;
-	Cell* getRandom();
-	int getLength();
+	int getLength() const;
+
+	Cell* getTop() const;
+	Cell* getRandom() const;
 };
 
 
@@ -70,6 +76,7 @@ private:
 
 	Cell* maze;
 	Stack* stack;
+	Stack* path;
 	int nbOfCellsVisited;
 
 public:
@@ -77,7 +84,8 @@ public:
 	~Maze();
 
 	bool generateMaze();
-	void printMaze() const;
+	bool solveMaze();
+	void printMaze(bool displayPath) const;
 
 
 
