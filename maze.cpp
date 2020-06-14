@@ -88,7 +88,13 @@ Maze::Maze(int width, int height)
 {
 	mazeWidth = width;
 	mazeHeight = height;
+
 	maze = new Cell[mazeHeight*mazeWidth];
+
+	entranceX = 0;
+	entranceY = 0;
+	exitX = width-1;
+	exitY = height-1;
 
 	for(int i = 0; i < mazeHeight; i++){
 		for(int j = 0; j < mazeWidth; j++){
@@ -105,8 +111,6 @@ Maze::Maze(int width, int height)
 	stack->push(&maze[0]);
 	nbOfCellsVisited = 1;
 	maze[0].visited = true;
-	maze[0].explored = true;
-	maze[0].isOnPath = true;
 }
 
 
@@ -115,14 +119,28 @@ Maze::~Maze()
 	delete stack;
 	stack = nullptr;
 
+	delete path;
+	path = nullptr;
+
 	delete [] maze;
 	delete maze;
 	maze =  nullptr;
 }
 
+void Maze::setEntrance(int x, int y){
+	entranceX = x;
+	entranceY = y;
+}
+
+void Maze::setExit(int x, int y){
+	exitX = x;
+	exitY = y;
+}
+
 
 bool Maze::generateMaze()
 {
+	// Base case (i.e. when all cells have been visited)
 	if(nbOfCellsVisited == mazeHeight*mazeWidth)
 		return true;
 
@@ -160,6 +178,7 @@ bool Maze::generateMaze()
 			neighbors.push(&maze[index]);
 	}
 
+	// There is a neighbor which we haven't visited yet, so explore it
 	if(!neighbors.isEmpty())
 	{
 		Cell* selectedNeighbor = neighbors.getRandom();
@@ -193,10 +212,12 @@ bool Maze::generateMaze()
 			selectedNeighbor->north = true;
 		}
 
-
+		// Adding the cell at the top of maze stack
 		stack->push(selectedNeighbor);
 		nbOfCellsVisited++;
 	}
+
+	// Stuck with no neighbors to visit so go backwards
 	else
 	{
 		stack->pop();
@@ -210,10 +231,16 @@ bool Maze::generateMaze()
 
 bool Maze::solveMaze()
 {
-	if(path->getTop() == nullptr)
-		path->push(&maze[0]);
+	// Initialization
+	if(path->getTop() == nullptr){
+		int index = entranceY * mazeWidth + entranceX;
+		maze[index].explored = true;
+		maze[index].isOnPath = true;
+		path->push(&maze[index]);
+	}
 
-	if(path->getTop()->x == mazeWidth-1 && path->getTop()->y == mazeHeight-1)
+	// Base Case
+	if(path->getTop()->x == exitX && path->getTop()->y == exitY)
 		return true;
 
 	// Finding whether there is a free neighbor to explore
@@ -241,6 +268,7 @@ bool Maze::solveMaze()
 			neighbors.push(&maze[index]);
 	}
 
+	// Selecting a neighbor to explore
 	if(!neighbors.isEmpty())
 	{
 		Cell* selectedNeighbor = neighbors.getRandom();
@@ -248,6 +276,7 @@ bool Maze::solveMaze()
 		selectedNeighbor->explored = true;
 		path->push(selectedNeighbor);
 	}
+	// Dead end so go backwards
 	else
 	{
 		path->getTop()->isOnPath = false;
@@ -267,17 +296,33 @@ void printRow(int nb)
 	cout << endl;
 }
 
+void printNumbers(int max){
+	cout << " ";
+	for(int i = 0; i < max; i++){
+		if(i < 9)
+			cout << i << "   ";
+		else
+			cout << i << "  ";
+	}
+	cout << endl;
+}
+
 
 void Maze::printMaze(bool displayPath) const
 {
+	printNumbers(mazeWidth);
 	printRow(4 * mazeWidth);
 	for(int i = 0; i < mazeHeight; i++){
 		cout << wall;
 
 		for(int j = 0; j < mazeWidth; j++){
 			if(maze[i*mazeWidth + j].east){
-				if(maze[i*mazeWidth + j].isOnPath && displayPath)
-					cout << solution << solution << solution << solution;
+				if(maze[i*mazeWidth + j].isOnPath && displayPath){
+					if(maze[i*mazeWidth + j + 1].isOnPath)
+						cout << solution << solution << solution << solution;
+					else
+						cout << solution << solution << space << space;
+				}
 				else
 					cout << space << space << space << space;
 			}
@@ -298,20 +343,28 @@ void Maze::printMaze(bool displayPath) const
 			}
 
 		}
-		cout << endl;
+		cout << " " << i << endl;
 		cout << wall;
 
 		for(int j = 0; j < mazeWidth; j++){
 			if(maze[i*mazeWidth + j].south){
 				if(j == mazeWidth-1){
-					if(maze[i*mazeWidth + j].isOnPath && displayPath)
-						cout << solution << solution << wall;
+					if(maze[i*mazeWidth + j].isOnPath && displayPath){
+						if(maze[i*mazeWidth + j + mazeWidth].isOnPath)
+							cout << solution << solution << wall;
+						else
+							cout << space << space << wall;
+					}
 					else
 						cout << space << space << wall;
 				}
 				else{
-					if(maze[i*mazeWidth + j].isOnPath && displayPath)
-						cout << solution << solution << wall << wall;
+					if(maze[i*mazeWidth + j].isOnPath && displayPath){
+						if(maze[i*mazeWidth + j + mazeWidth].isOnPath)
+							cout << solution << solution << wall << wall;
+						else
+							cout << space << space << wall << wall;
+					}
 					else
 						cout << space << space << wall << wall;
 				}

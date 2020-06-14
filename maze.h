@@ -74,6 +74,11 @@ private:
 	int mazeWidth;
 	int mazeHeight;
 
+	int entranceX;
+	int entranceY;
+	int exitX;
+	int exitY;
+
 	Cell* maze;
 	Stack* stack;
 	Stack* path;
@@ -85,6 +90,9 @@ public:
 
 	bool generateMaze();
 	bool solveMaze();
+	void setEntrance(int x, int y);
+	void setExit(int x, int y);
+
 	void printMaze(bool displayPath) const;
 
 

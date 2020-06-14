@@ -12,12 +12,29 @@ int main(){
 
 	srand(clock());
 
-	Maze maze(15, 15);
+	int sizeX, sizeY;
+	cout << "Enter the dimensions of the maze (width & height): ";
+	cin >> sizeX >> sizeY;
 	cout << endl;
-	cout << boolalpha << maze.generateMaze() << endl;
+
+	Maze maze(sizeX, sizeY);
+	maze.generateMaze();
 	maze.printMaze(false);
 
-	cout << boolalpha << maze.solveMaze() << endl;
+	int entranceX, entranceY, exitX, exitY;
+	cout << endl << "Enter the entrance coordinates (X: 0-" << sizeX-1
+			<< " & Y: 0-" << sizeY-1 << "): ";
+	cin >> entranceX >> entranceY;
+	maze.setEntrance(entranceX, entranceY);
+
+	cout << "Enter the exit coordinates (X: 0-" << sizeX-1
+			<< " & Y: 0-" << sizeY-1 << "): ";
+	cin >> exitX >> exitY;
+	maze.setExit(exitX, exitY);
+
+	cout << endl;
+
+	maze.solveMaze();
 	maze.printMaze(true);
 
 
